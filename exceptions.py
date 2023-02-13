@@ -1,10 +1,16 @@
-class TelegramError(Exception):
-    """Проблема со стороны Telegram."""
+class SendMassageError(Exception):
+    """Ошибка отправки сообщения."""
 
     pass
 
 
-class APIResponseError(Exception):
-    """Ошибка ответа от API."""
+class InvalidResponseCode(Exception):
+    """Не верный код ответа."""
+
+    pass
+
+
+class EmptyResponseFromAPI(Exception):
+    """Пустой ответ от API."""
 
     pass
