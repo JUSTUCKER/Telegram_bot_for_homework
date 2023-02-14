@@ -12,7 +12,7 @@ import exceptions
 
 load_dotenv()
 
-BASE_DIR = ''
+BASE_DIR = os.path.dirname(__file__)
 LOG_PATH = os.path.join(BASE_DIR, 'program.log')
 
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
@@ -50,7 +50,6 @@ def check_tokens():
 
 def send_message(bot, message):
     """Отправляет сообщение в Telegram чат."""
-    message_sent = True
     try:
         logging.debug(f'Попытка отправки сообщения: {message}')
         bot.send_message(
@@ -58,12 +57,11 @@ def send_message(bot, message):
             text=message,
         )
     except telegram.error.TelegramError as error:
-        message_sent = False
         logging.error(f'Не удалось отправить сообщение: {error}')
-        return message_sent
+        return False
     else:
         logging.debug(f'Отправлено сообщение: {message}')
-        return message_sent
+        return True
 
 
 def get_api_answer(timestamp):
@@ -149,12 +147,9 @@ def main():
             else:
                 current_report['output'] = 'Нет новых статусов'
             if current_report != prev_report:
-                if not send_message(bot, message):
-                    raise exceptions.SendMassageError(
-                        'Сообщение не отправлено'
-                    )
-                prev_report = current_report.copy()
-                timestamp = response.get('current_date', timestamp)
+                if send_message(bot, message):
+                    prev_report = current_report.copy()
+                    timestamp = response.get('current_date', timestamp)
             else:
                 logging.debug('Нет новых статусов')
         except exceptions.EmptyResponseFromAPI as error:
@@ -162,7 +157,7 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             current_report['output'] = message
-            logging.error(message)
+            logging.exception(message)
             if current_report != prev_report:
                 send_message(bot, message)
                 prev_report = current_report.copy()
